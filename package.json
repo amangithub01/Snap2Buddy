@@ -1,0 +1,14 @@
+{
+  "name": "snap2study",
+  "version": "1.0.0",
+  "description": "Snap2Study - Multimodal study kit generator powered by Gemma 4",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "type": "module",
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0"
+  }
+}
