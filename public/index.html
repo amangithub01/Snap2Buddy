@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snap2Study - Multimodal Study Kit Generator</title>
+  <meta name="description" content="Turn any photo of handwritten notes, textbook pages, or whiteboards into a summary, flashcards, and an interactive quiz powered by Gemma 4.">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-wrapper">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-badge">
+        <span class="badge-dot"></span>
+        <span class="badge-text">Multimodal Gemma 4 AI</span>
+      </div>
+      <h1 class="app-title">📸 Snap2Study</h1>
+      <p class="app-subtitle">Turn any photo of notes into a summary, flashcards and a quiz.</p>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-container">
+      
+      <!-- Upload Card -->
+      <section class="card upload-card" id="uploadSection">
+        
+        <!-- Drag & Drop Zone -->
+        <div class="drop-zone" id="dropZone" tabindex="0" role="region" aria-label="Image upload area">
+          <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" class="file-input" aria-label="Upload study image">
+          
+          <div class="drop-zone-content" id="dropZonePrompt">
+            <div class="upload-icon-wrapper">
+              <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+            <h2 class="drop-zone-title">Upload your study material</h2>
+            <p class="drop-zone-desc">Drag &amp; drop handwritten notes, textbook pages, diagrams, or whiteboards here</p>
+            <div class="drop-zone-actions">
+              <button type="button" class="btn btn-secondary" id="browseBtn">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Browse Files
+              </button>
+              <button type="button" class="btn btn-ghost" id="sampleBtn">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                Try Sample Notes
+              </button>
+            </div>
+            <p class="drop-zone-formats">Supports JPG, PNG, WEBP (Max 8 MB)</p>
+          </div>
+
+          <!-- Selected Image Preview -->
+          <div class="preview-container hidden" id="previewContainer">
+            <div class="preview-image-wrapper">
+              <img id="previewImg" src="" alt="Study notes preview">
+              <div class="preview-scanner hidden" id="previewScanner"></div>
+            </div>
+            <div class="preview-info">
+              <div class="preview-meta">
+                <span class="preview-name" id="previewFileName">notes.jpg</span>
+                <span class="preview-size" id="previewFileSize">1.2 MB</span>
+              </div>
+              <button type="button" class="btn-icon" id="removeImgBtn" title="Remove image" aria-label="Remove image">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls: Difficulty & Generate Button -->
+        <div class="controls-row">
+          <div class="control-group">
+            <label for="difficultySelect" class="control-label">Study Depth / Difficulty:</label>
+            <div class="select-wrapper">
+              <select id="difficultySelect" class="custom-select">
+                <option value="Beginner">Beginner (Core concepts, simple definitions)</option>
+                <option value="Intermediate" selected>Intermediate (Comprehensive coverage)</option>
+                <option value="Advanced">Advanced (Deep mechanics &amp; analytical nuance)</option>
+              </select>
+              <svg class="select-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+
+          <div class="action-group">
+            <button type="button" class="btn btn-primary btn-generate" id="generateBtn" disabled>
+              <span class="btn-text">Generate Study Kit</span>
+              <svg class="btn-arrow" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Loading State -->
+      <section class="card loading-card hidden" id="loadingSection" aria-live="polite">
+        <div class="loading-spinner-wrapper">
+          <div class="scanner-ring"></div>
+          <div class="scanner-dot"></div>
+        </div>
+        <h2 class="loading-title">Gemma is reading your page…</h2>
+        <p class="loading-subtitle" id="loadingTip">Analyzing handwritten text, diagrams, and formulas...</p>
+        <div class="loading-model-tag">
+          <span class="model-pill">Primary: gemma-4-31b-it</span>
+          <span class="model-fallback-pill">Auto-fallback: gemma-4-26b-a4b-it</span>
+        </div>
+      </section>
+
+      <!-- Error State -->
+      <section class="card error-card hidden" id="errorSection" role="alert">
+        <div class="error-icon-wrapper">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="error-content">
+          <h2 class="error-title" id="errorTitle">Could not generate study kit</h2>
+          <p class="error-message" id="errorMessage">An unexpected error occurred.</p>
+        </div>
+        <button type="button" class="btn btn-secondary" id="tryAgainBtn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          Try Again
+        </button>
+      </section>
+
+      <!-- Results Container (Hidden until generated) -->
+      <div class="results-container hidden" id="resultsSection">
+        
+        <!-- Result Bar / Quick Navigation -->
+        <div class="results-header-bar">
+          <div class="kit-badge">
+            <span class="badge-icon">✨</span>
+            <span id="modelUsedBadge">Generated by Gemma 4</span>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" id="newKitBtn">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Study Kit
+          </button>
+        </div>
+
+        <!-- Section 1: Title & Summary -->
+        <section class="card result-card summary-card">
+          <div class="section-tag">Overview</div>
+          <h2 class="kit-title" id="kitTitle">Study Notes Overview</h2>
+          <div class="kit-summary" id="kitSummary"></div>
+        </section>
+
+        <!-- Section 2: Key Concepts -->
+        <section class="card result-card concepts-card">
+          <div class="section-tag">Core Takeaways</div>
+          <h2 class="section-title">Key Concepts</h2>
+          <ul class="concepts-list" id="conceptsList"></ul>
+        </section>
+
+        <!-- Section 3: Flashcards -->
+        <section class="card result-card flashcards-card">
+          <div class="section-header-row">
+            <div>
+              <div class="section-tag">Active Recall</div>
+              <h2 class="section-title">Interactive Flashcards</h2>
+              <p class="section-hint">Click any card to flip between Question and Answer</p>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" id="flipAllCardsBtn">
+              Flip All Cards 🔄
+            </button>
+          </div>
+          <div class="flashcards-grid" id="flashcardsGrid"></div>
+        </section>
+
+        <!-- Section 4: Quiz -->
+        <section class="card result-card quiz-card">
+          <div class="section-header-row">
+            <div>
+              <div class="section-tag">Knowledge Check</div>
+              <h2 class="section-title">Quick Quiz</h2>
+              <p class="section-hint">Test your comprehension with 4 targeted questions</p>
+            </div>
+            <div class="score-display-box" id="scoreDisplay">
+              <span class="score-label">Score:</span>
+              <span class="score-value" id="scoreValue">0/4</span>
+            </div>
+          </div>
+          <div class="quiz-container" id="quizContainer"></div>
+        </section>
+
+        <!-- Section 5: Ask a Follow-up -->
+        <section class="card result-card followup-card">
+          <div class="section-tag">Visual Inquiry</div>
+          <h2 class="section-title">Ask a Follow-up Question</h2>
+          <p class="section-hint">Have a question about a formula, diagram, or section from the page? Gemma will answer in under 150 words using only the image.</p>
+          
+          <form class="followup-form" id="followupForm">
+            <div class="input-row">
+              <input type="text" id="followupInput" class="custom-input" placeholder="e.g. What does the mitochondrion cristae diagram show?" autocomplete="off" required>
+              <button type="submit" class="btn btn-primary" id="askBtn">
+                <span>Ask Gemma</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+          </form>
+
+          <!-- Follow-up Answer Box -->
+          <div class="followup-answer-box hidden" id="followupAnswerBox">
+            <div class="answer-header">
+              <span class="answer-badge">Gemma's Visual Answer</span>
+              <span class="word-limit-tag">&lt; 150 words</span>
+            </div>
+            <p class="answer-text" id="followupAnswerText"></p>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p class="footer-text">Powered by Gemma 4 via the Gemini API</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
